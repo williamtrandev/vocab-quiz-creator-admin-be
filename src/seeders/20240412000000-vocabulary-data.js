@@ -1,0 +1,123 @@
+'use strict';
+
+module.exports = {
+	up: async (queryInterface, Sequelize) => {
+		const vocabularyData = [
+			// Beginner (20 từ)
+			{ word: 'hello', meaning: 'xin chào', level: 'beginner' },
+			{ word: 'goodbye', meaning: 'tạm biệt', level: 'beginner' },
+			{ word: 'thank you', meaning: 'cảm ơn', level: 'beginner' },
+			{ word: 'please', meaning: 'làm ơn', level: 'beginner' },
+			{ word: 'yes', meaning: 'có', level: 'beginner' },
+			{ word: 'no', meaning: 'không', level: 'beginner' },
+			{ word: 'sorry', meaning: 'xin lỗi', level: 'beginner' },
+			{ word: 'name', meaning: 'tên', level: 'beginner' },
+			{ word: 'age', meaning: 'tuổi', level: 'beginner' },
+			{ word: 'time', meaning: 'thời gian', level: 'beginner' },
+			{ word: 'day', meaning: 'ngày', level: 'beginner' },
+			{ word: 'night', meaning: 'đêm', level: 'beginner' },
+			{ word: 'food', meaning: 'thức ăn', level: 'beginner' },
+			{ word: 'water', meaning: 'nước', level: 'beginner' },
+			{ word: 'home', meaning: 'nhà', level: 'beginner' },
+			{ word: 'school', meaning: 'trường học', level: 'beginner' },
+			{ word: 'work', meaning: 'làm việc', level: 'beginner' },
+			{ word: 'family', meaning: 'gia đình', level: 'beginner' },
+			{ word: 'friend', meaning: 'bạn bè', level: 'beginner' },
+			{ word: 'help', meaning: 'giúp đỡ', level: 'beginner' },
+
+			// Elementary (20 từ)
+			{ word: 'morning', meaning: 'buổi sáng', level: 'elementary' },
+			{ word: 'afternoon', meaning: 'buổi chiều', level: 'elementary' },
+			{ word: 'evening', meaning: 'buổi tối', level: 'elementary' },
+			{ word: 'week', meaning: 'tuần', level: 'elementary' },
+			{ word: 'month', meaning: 'tháng', level: 'elementary' },
+			{ word: 'year', meaning: 'năm', level: 'elementary' },
+			{ word: 'weather', meaning: 'thời tiết', level: 'elementary' },
+			{ word: 'season', meaning: 'mùa', level: 'elementary' },
+			{ word: 'color', meaning: 'màu sắc', level: 'elementary' },
+			{ word: 'number', meaning: 'số', level: 'elementary' },
+			{ word: 'animal', meaning: 'động vật', level: 'elementary' },
+			{ word: 'plant', meaning: 'cây cối', level: 'elementary' },
+			{ word: 'city', meaning: 'thành phố', level: 'elementary' },
+			{ word: 'country', meaning: 'đất nước', level: 'elementary' },
+			{ word: 'language', meaning: 'ngôn ngữ', level: 'elementary' },
+			{ word: 'music', meaning: 'âm nhạc', level: 'elementary' },
+			{ word: 'sport', meaning: 'thể thao', level: 'elementary' },
+			{ word: 'movie', meaning: 'phim', level: 'elementary' },
+			{ word: 'book', meaning: 'sách', level: 'elementary' },
+			{ word: 'computer', meaning: 'máy tính', level: 'elementary' },
+
+			// Intermediate (20 từ)
+			{ word: 'communication', meaning: 'giao tiếp', level: 'intermediate' },
+			{ word: 'education', meaning: 'giáo dục', level: 'intermediate' },
+			{ word: 'environment', meaning: 'môi trường', level: 'intermediate' },
+			{ word: 'technology', meaning: 'công nghệ', level: 'intermediate' },
+			{ word: 'business', meaning: 'kinh doanh', level: 'intermediate' },
+			{ word: 'economy', meaning: 'kinh tế', level: 'intermediate' },
+			{ word: 'politics', meaning: 'chính trị', level: 'intermediate' },
+			{ word: 'society', meaning: 'xã hội', level: 'intermediate' },
+			{ word: 'culture', meaning: 'văn hóa', level: 'intermediate' },
+			{ word: 'tradition', meaning: 'truyền thống', level: 'intermediate' },
+			{ word: 'history', meaning: 'lịch sử', level: 'intermediate' },
+			{ word: 'science', meaning: 'khoa học', level: 'intermediate' },
+			{ word: 'research', meaning: 'nghiên cứu', level: 'intermediate' },
+			{ word: 'development', meaning: 'phát triển', level: 'intermediate' },
+			{ word: 'management', meaning: 'quản lý', level: 'intermediate' },
+			{ word: 'organization', meaning: 'tổ chức', level: 'intermediate' },
+			{ word: 'relationship', meaning: 'mối quan hệ', level: 'intermediate' },
+			{ word: 'experience', meaning: 'kinh nghiệm', level: 'intermediate' },
+			{ word: 'knowledge', meaning: 'kiến thức', level: 'intermediate' },
+			{ word: 'opportunity', meaning: 'cơ hội', level: 'intermediate' },
+
+			// Advanced (20 từ)
+			{ word: 'accomplishment', meaning: 'thành tựu', level: 'advanced' },
+			{ word: 'achievement', meaning: 'thành tích', level: 'advanced' },
+			{ word: 'ambition', meaning: 'tham vọng', level: 'advanced' },
+			{ word: 'aspiration', meaning: 'khát vọng', level: 'advanced' },
+			{ word: 'capability', meaning: 'năng lực', level: 'advanced' },
+			{ word: 'competence', meaning: 'năng lực', level: 'advanced' },
+			{ word: 'determination', meaning: 'quyết tâm', level: 'advanced' },
+			{ word: 'diligence', meaning: 'siêng năng', level: 'advanced' },
+			{ word: 'excellence', meaning: 'xuất sắc', level: 'advanced' },
+			{ word: 'expertise', meaning: 'chuyên môn', level: 'advanced' },
+			{ word: 'innovation', meaning: 'đổi mới', level: 'advanced' },
+			{ word: 'leadership', meaning: 'khả năng lãnh đạo', level: 'advanced' },
+			{ word: 'perseverance', meaning: 'kiên trì', level: 'advanced' },
+			{ word: 'potential', meaning: 'tiềm năng', level: 'advanced' },
+			{ word: 'proficiency', meaning: 'thành thạo', level: 'advanced' },
+			{ word: 'qualification', meaning: 'trình độ', level: 'advanced' },
+			{ word: 'reliability', meaning: 'độ tin cậy', level: 'advanced' },
+			{ word: 'responsibility', meaning: 'trách nhiệm', level: 'advanced' },
+			{ word: 'sophistication', meaning: 'sự tinh vi', level: 'advanced' },
+			{ word: 'versatility', meaning: 'tính linh hoạt', level: 'advanced' },
+
+			// Expert (20 từ)
+			{ word: 'abstemious', meaning: 'tiết chế', level: 'expert' },
+			{ word: 'benevolent', meaning: 'nhân từ', level: 'expert' },
+			{ word: 'circumspect', meaning: 'thận trọng', level: 'expert' },
+			{ word: 'discerning', meaning: 'sáng suốt', level: 'expert' },
+			{ word: 'equanimity', meaning: 'bình tĩnh', level: 'expert' },
+			{ word: 'fastidious', meaning: 'kỹ tính', level: 'expert' },
+			{ word: 'gregarious', meaning: 'hòa đồng', level: 'expert' },
+			{ word: 'humility', meaning: 'khiêm tốn', level: 'expert' },
+			{ word: 'indomitable', meaning: 'bất khuất', level: 'expert' },
+			{ word: 'judicious', meaning: 'sáng suốt', level: 'expert' },
+			{ word: 'kaleidoscopic', meaning: 'đa dạng', level: 'expert' },
+			{ word: 'luminous', meaning: 'sáng chói', level: 'expert' },
+			{ word: 'magnanimous', meaning: 'rộng lượng', level: 'expert' },
+			{ word: 'noble', meaning: 'cao quý', level: 'expert' },
+			{ word: 'obligation', meaning: 'nghĩa vụ', level: 'expert' },
+			{ word: 'persevere', meaning: 'kiên trì', level: 'expert' },
+			{ word: 'quintessential', meaning: 'tinh túy', level: 'expert' },
+			{ word: 'resilience', meaning: 'khả năng phục hồi', level: 'expert' },
+			{ word: 'sagacious', meaning: 'thông thái', level: 'expert' },
+			{ word: 'tenacity', meaning: 'sự bền bỉ', level: 'expert' }
+		];
+
+		await queryInterface.bulkInsert('vocabulary', vocabularyData, {});
+	},
+
+	down: async (queryInterface, Sequelize) => {
+		await queryInterface.bulkDelete('vocabulary', null, {});
+	}
+}; 
