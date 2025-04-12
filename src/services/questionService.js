@@ -54,10 +54,12 @@ class QuestionService {
 		try {
 			const questions = await Question.findAll({
 				where: { questionSetId },
+				attributes: { exclude: ['vocabularyId', 'questionSetId'] },
 				include: [
 					{
 						model: Vocabulary,
-						attributes: ['word', 'meaning', 'level']
+						as: 'vocabulary',
+						attributes: ['id', 'word', 'meaning']
 					}
 				]
 			});

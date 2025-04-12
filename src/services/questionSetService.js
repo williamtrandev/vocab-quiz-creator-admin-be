@@ -85,10 +85,13 @@ class QuestionSetService {
 				include: [
 					{
 						model: Question,
+						as: 'questions',
+						attributes: { exclude: ['vocabularyId', 'questionSetId', 'createdAt', 'updatedAt'] },
 						include: [
 							{
 								model: Vocabulary,
-								attributes: ['word', 'meaning', 'level']
+								as: 'vocabulary',
+								attributes: ['id', 'word', 'meaning']
 							}
 						]
 					}
@@ -124,10 +127,13 @@ class QuestionSetService {
 				include: [
 					{
 						model: Question,
+						as: 'questions',
+						attributes: { exclude: ['vocabularyId', 'questionSetId', 'createdAt', 'updatedAt'] },
 						include: [
 							{
 								model: Vocabulary,
-								attributes: ['word', 'meaning', 'level']
+								as: 'vocabulary',
+								attributes: ['id', 'word', 'meaning']
 							}
 						]
 					}

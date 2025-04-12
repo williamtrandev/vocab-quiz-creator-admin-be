@@ -134,12 +134,83 @@ const Question = sequelize.define('Question', {
 	timezone: '+07:00'
 });
 
-// Thiết lập quan hệ giữa các model
-QuestionSet.hasMany(Question, { foreignKey: 'questionSetId' });
-Question.belongsTo(QuestionSet, { foreignKey: 'questionSetId' });
+// Định nghĩa model User
+const User = sequelize.define('User', {
+	id: {
+		type: DataTypes.INTEGER,
+		primaryKey: true,
+		autoIncrement: true
+	},
+	name: {
+		type: DataTypes.STRING(255),
+		allowNull: false
+	},
+	age: {
+		type: DataTypes.INTEGER,
+		allowNull: false
+	},
+	username: {
+		type: DataTypes.STRING(255),
+		allowNull: false,
+		unique: true
+	},
+	password: {
+		type: DataTypes.STRING(255),
+		allowNull: false
+	},
+	role: {
+		type: DataTypes.ENUM('admin', 'learner'),
+		allowNull: false,
+		defaultValue: 'learner'
+	},
+	level: {
+		type: DataTypes.ENUM('beginner', 'elementary', 'intermediate', 'advanced', 'expert'),
+		allowNull: true
+	},
+	createdAt: {
+		type: DataTypes.DATE,
+		allowNull: false,
+		defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+	},
+	updatedAt: {
+		type: DataTypes.DATE,
+		allowNull: false,
+		defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
+	}
+}, {
+	tableName: 'users',
+	timestamps: true,
+	underscored: false,
+	timezone: '+07:00'
+});
 
-Question.belongsTo(Vocabulary, { foreignKey: 'vocabularyId' });
-Vocabulary.hasMany(Question, { foreignKey: 'vocabularyId' });
+// Thiết lập quan hệ giữa các model
+QuestionSet.hasMany(Question, {
+	foreignKey: 'questionSetId',
+	as: 'questions'
+});
+Question.belongsTo(QuestionSet, {
+	foreignKey: 'questionSetId',
+	as: 'questionSet'
+});
+
+Question.belongsTo(Vocabulary, {
+	foreignKey: 'vocabularyId',
+	as: 'vocabulary'
+});
+Vocabulary.hasMany(Question, {
+	foreignKey: 'vocabularyId',
+	as: 'questions'
+});
+
+User.hasMany(QuestionSet, {
+	foreignKey: 'userId',
+	as: 'questionSets'
+});
+QuestionSet.belongsTo(User, {
+	foreignKey: 'userId',
+	as: 'user'
+});
 
 // Hàm kiểm tra kết nối database
 async function testConnection() {
@@ -159,6 +230,7 @@ async function syncDatabase() {
 		await Vocabulary.sync({ alter: true });
 		await QuestionSet.sync({ alter: true });
 		await Question.sync({ alter: true });
+		await User.sync({ alter: true });
 		console.log('Database synchronized successfully.');
 	} catch (error) {
 		console.error('Error synchronizing database:', error);
@@ -171,6 +243,7 @@ module.exports = {
 	Vocabulary,
 	Question,
 	QuestionSet,
+	User,
 	testConnection,
 	syncDatabase
 };

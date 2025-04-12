@@ -16,6 +16,7 @@ const requestLogger = require('./middlewares/requestLogger');
 const vocabularyRoutes = require('./routes/vocabularyRoutes');
 const questionSetRoutes = require('./routes/questionSetRoutes');
 const questionRoutes = require('./routes/questionRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 // Khởi tạo Express app
 const app = express();
@@ -48,6 +49,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/vocabulary', vocabularyRoutes);
 app.use('/api/question-sets', questionSetRoutes);
 app.use('/api/questions', questionRoutes);
+app.use('/api/users', userRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
