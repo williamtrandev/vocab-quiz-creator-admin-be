@@ -1,4 +1,4 @@
-const { Vocabulary } = require('../models');
+const { Vocabulary, Topic } = require('../models');
 const { Op } = require('sequelize');
 const Joi = require('joi');
 
@@ -6,6 +6,7 @@ const Joi = require('joi');
 const vocabularySchema = Joi.object({
 	word: Joi.string().required().max(255).trim(),
 	meaning: Joi.string().required().trim(),
+	example: Joi.string().allow('', null).trim(),
 	level: Joi.string().required().valid('beginner', 'elementary', 'intermediate', 'advanced', 'expert')
 });
 
@@ -26,7 +27,17 @@ class VocabularyService {
 				queryOptions.where = { level };
 			}
 
-			const { count, rows } = await Vocabulary.findAndCountAll(queryOptions);
+			const { count, rows } = await Vocabulary.findAndCountAll({
+				...queryOptions,
+				include: [
+					{
+						model: Topic,
+						as: 'topic',
+						attributes: ['id', 'name', 'description'], 
+						required: false
+					}
+				]
+			});
 
 			return {
 				data: rows,
@@ -88,16 +99,23 @@ class VocabularyService {
 	 */
 	async createVocabulary(vocabularyData) {
 		try {
-			// Validate data
-			const { error, value } = vocabularySchema.validate(vocabularyData);
-			if (error) {
-				throw new Error(`Validation error: ${error.details[0].message}`);
+			// Kiểm tra topic nếu có
+			if (vocabularyData.topicId) {
+				const topic = await Topic.findByPk(vocabularyData.topicId);
+				if (!topic) {
+					throw new Error('Topic not found');
+				}
+
+				// Kiểm tra level của topic và từ vựng
+				if (topic.level !== vocabularyData.level) {
+					throw new Error('Vocabulary level must match topic level');
+				}
 			}
 
-			const vocabulary = await Vocabulary.create(value);
+			const vocabulary = await Vocabulary.create(vocabularyData);
 			return vocabulary;
 		} catch (error) {
-			throw error;
+			throw new Error(`Error creating vocabulary: ${error.message}`);
 		}
 	}
 
@@ -106,22 +124,33 @@ class VocabularyService {
 	 */
 	async updateVocabulary(id, vocabularyData) {
 		try {
-			// Validate data
-			const { error, value } = vocabularySchema.validate(vocabularyData);
-			if (error) {
-				throw new Error(`Validation error: ${error.details[0].message}`);
-			}
-
-			// Kiểm tra xem từ vựng có tồn tại không
 			const vocabulary = await Vocabulary.findByPk(id);
 			if (!vocabulary) {
 				throw new Error('Vocabulary not found');
 			}
 
-			await vocabulary.update(value);
+			// Kiểm tra topic nếu có thay đổi
+			if (vocabularyData.topicId !== undefined) {
+				if (vocabularyData.topicId === null) {
+					// Cho phép set topicId = null
+					vocabularyData.topicId = null;
+				} else {
+					const topic = await Topic.findByPk(vocabularyData.topicId);
+					if (!topic) {
+						throw new Error('Topic not found');
+					}
+
+					// Kiểm tra level của topic và từ vựng
+					if (topic.level !== vocabularyData.level) {
+						throw new Error('Vocabulary level must match topic level');
+					}
+				}
+			}
+
+			await vocabulary.update(vocabularyData);
 			return vocabulary;
 		} catch (error) {
-			throw error;
+			throw new Error(`Error updating vocabulary: ${error.message}`);
 		}
 	}
 
@@ -130,16 +159,15 @@ class VocabularyService {
 	 */
 	async deleteVocabulary(id) {
 		try {
-			// Kiểm tra xem từ vựng có tồn tại không
 			const vocabulary = await Vocabulary.findByPk(id);
 			if (!vocabulary) {
 				throw new Error('Vocabulary not found');
 			}
 
 			await vocabulary.destroy();
-			return { success: true };
+			return true;
 		} catch (error) {
-			throw error;
+			throw new Error(`Error deleting vocabulary: ${error.message}`);
 		}
 	}
 

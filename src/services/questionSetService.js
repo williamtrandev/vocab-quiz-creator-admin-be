@@ -95,7 +95,8 @@ class QuestionSetService {
 							}
 						]
 					}
-				]
+				],
+				distinct: true // Thêm distinct để count chính xác số lượng question sets
 			};
 
 			if (level) {

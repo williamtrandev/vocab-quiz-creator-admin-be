@@ -28,4 +28,13 @@ router.post('/login', validateLogin, userController.login);
 router.get('/learners', authenticateToken, isAdmin, userController.getLearners);
 router.put('/:id', authenticateToken, userController.updateUser);
 
+// Lấy danh sách từ vựng của người dùng
+router.get('/vocabularies', authenticateToken, userController.getUserVocabularies);
+
+// Đánh dấu từ vựng đã học
+router.post('/vocabularies/:vocabularyId/learned', authenticateToken, userController.markVocabularyAsLearned);
+
+// Đánh dấu từ vựng chưa học
+router.post('/vocabularies/:vocabularyId/unlearned', authenticateToken, userController.markVocabularyAsUnlearned);
+
 module.exports = router; 

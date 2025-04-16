@@ -17,6 +17,8 @@ const vocabularyRoutes = require('./routes/vocabularyRoutes');
 const questionSetRoutes = require('./routes/questionSetRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const userRoutes = require('./routes/userRoutes');
+const topicRoutes = require('./routes/topicRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 // Khởi tạo Express app
 const app = express();
@@ -50,6 +52,8 @@ app.use('/api/vocabulary', vocabularyRoutes);
 app.use('/api/question-sets', questionSetRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/topics', topicRoutes);
+app.use('/api/payment', paymentRoutes); 
 
 // 404 handler
 app.use(notFoundHandler);

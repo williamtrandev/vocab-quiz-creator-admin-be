@@ -16,9 +16,21 @@ const Vocabulary = sequelize.define('Vocabulary', {
 		type: DataTypes.TEXT,
 		allowNull: false
 	},
+	example: {
+		type: DataTypes.TEXT,
+		allowNull: true
+	},
 	level: {
 		type: DataTypes.ENUM('beginner', 'elementary', 'intermediate', 'advanced', 'expert'),
 		allowNull: false
+	},
+	topicId: {
+		type: DataTypes.INTEGER,
+		allowNull: true,
+		references: {
+			model: 'Topics',
+			key: 'id'
+		}
 	},
 	createdAt: {
 		type: DataTypes.DATE,
@@ -34,7 +46,14 @@ const Vocabulary = sequelize.define('Vocabulary', {
 	tableName: 'vocabulary',
 	timestamps: true,
 	underscored: false,
-	timezone: '+07:00'
+	timezone: '+07:00',
+	toJSON: {
+		transform: (doc, ret) => {
+			ret.createdAt = ret.createdAt;
+			ret.updatedAt = ret.updatedAt;
+			return ret;
+		}
+	}
 });
 
 // Định nghĩa model QuestionSet
@@ -75,7 +94,14 @@ const QuestionSet = sequelize.define('QuestionSet', {
 	tableName: 'question_sets',
 	timestamps: true,
 	underscored: false,
-	timezone: '+07:00'
+	timezone: '+07:00',
+	toJSON: {
+		transform: (doc, ret) => {
+			ret.createdAt = ret.createdAt;
+			ret.updatedAt = ret.updatedAt;
+			return ret;
+		}
+	}
 });
 
 // Định nghĩa model Question
@@ -131,7 +157,14 @@ const Question = sequelize.define('Question', {
 	tableName: 'questions',
 	timestamps: true,
 	underscored: false,
-	timezone: '+07:00'
+	timezone: '+07:00',
+	toJSON: {
+		transform: (doc, ret) => {
+			ret.createdAt = ret.createdAt;
+			ret.updatedAt = ret.updatedAt;
+			return ret;
+		}
+	}
 });
 
 // Định nghĩa model User
@@ -142,20 +175,15 @@ const User = sequelize.define('User', {
 		autoIncrement: true
 	},
 	name: {
-		type: DataTypes.STRING(255),
-		allowNull: false
-	},
-	age: {
-		type: DataTypes.INTEGER,
+		type: DataTypes.STRING,
 		allowNull: false
 	},
 	username: {
-		type: DataTypes.STRING(255),
-		allowNull: false,
-		unique: true
+		type: DataTypes.STRING,
+		allowNull: false
 	},
 	password: {
-		type: DataTypes.STRING(255),
+		type: DataTypes.STRING,
 		allowNull: false
 	},
 	role: {
@@ -166,6 +194,40 @@ const User = sequelize.define('User', {
 	level: {
 		type: DataTypes.ENUM('beginner', 'elementary', 'intermediate', 'advanced', 'expert'),
 		allowNull: true
+	}
+}, {
+	tableName: 'users',
+	timestamps: true,
+	indexes: [
+		{
+			unique: true,
+			fields: ['username']
+		}
+	]
+});
+
+// Định nghĩa model UserVocabulary
+const UserVocabulary = sequelize.define('UserVocabulary', {
+	id: {
+		type: DataTypes.INTEGER,
+		primaryKey: true,
+		autoIncrement: true
+	},
+	userId: {
+		type: DataTypes.INTEGER,
+		allowNull: false,
+		references: {
+			model: 'users',
+			key: 'id'
+		}
+	},
+	vocabularyId: {
+		type: DataTypes.INTEGER,
+		allowNull: false,
+		references: {
+			model: 'vocabulary',
+			key: 'id'
+		}
 	},
 	createdAt: {
 		type: DataTypes.DATE,
@@ -178,7 +240,7 @@ const User = sequelize.define('User', {
 		defaultValue: sequelize.literal('CURRENT_TIMESTAMP')
 	}
 }, {
-	tableName: 'users',
+	tableName: 'user_vocabulary',
 	timestamps: true,
 	underscored: false,
 	timezone: '+07:00'
@@ -203,13 +265,68 @@ Vocabulary.hasMany(Question, {
 	as: 'questions'
 });
 
-User.hasMany(QuestionSet, {
+// Thiết lập quan hệ giữa User và Vocabulary thông qua UserVocabulary
+User.belongsToMany(Vocabulary, {
+	through: UserVocabulary,
 	foreignKey: 'userId',
-	as: 'questionSets'
+	otherKey: 'vocabularyId'
 });
-QuestionSet.belongsTo(User, {
-	foreignKey: 'userId',
-	as: 'user'
+
+Vocabulary.belongsToMany(User, {
+	through: UserVocabulary,
+	foreignKey: 'vocabularyId',
+	otherKey: 'userId'
+});
+
+// Topic model
+const Topic = sequelize.define('Topic', {
+	id: {
+		type: DataTypes.INTEGER,
+		primaryKey: true,
+		autoIncrement: true
+	},
+	name: {
+		type: DataTypes.STRING,
+		allowNull: false
+	},
+	description: {
+		type: DataTypes.TEXT,
+		allowNull: true
+	},
+	level: {
+		type: DataTypes.ENUM('beginner', 'elementary', 'intermediate', 'advanced', 'expert'),
+		allowNull: false
+	},
+	createdAt: {
+		type: DataTypes.DATE,
+		allowNull: false,
+		defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
+	},
+	updatedAt: {
+		type: DataTypes.DATE,
+		allowNull: false,
+		defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
+	}
+}, {
+	timestamps: true,
+	timezone: '+07:00',
+	toJSON: {
+		transform: (doc, ret) => {
+			ret.createdAt = ret.createdAt;
+			ret.updatedAt = ret.updatedAt;
+			return ret;
+		}
+	}
+});
+
+// Add associations
+Topic.hasMany(Vocabulary, { 
+	foreignKey: 'topicId',
+	as: 'vocabularies'
+});
+Vocabulary.belongsTo(Topic, { 
+	foreignKey: 'topicId',
+	as: 'topic' 
 });
 
 // Hàm kiểm tra kết nối database
@@ -231,6 +348,7 @@ async function syncDatabase() {
 		await QuestionSet.sync({ alter: true });
 		await Question.sync({ alter: true });
 		await User.sync({ alter: true });
+		await UserVocabulary.sync({ alter: true });
 		console.log('Database synchronized successfully.');
 	} catch (error) {
 		console.error('Error synchronizing database:', error);
@@ -244,6 +362,8 @@ module.exports = {
 	Question,
 	QuestionSet,
 	User,
+	UserVocabulary,
 	testConnection,
-	syncDatabase
+	syncDatabase,
+	Topic
 };
