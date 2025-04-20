@@ -176,3 +176,59 @@ exports.markVocabularyAsUnlearned = async (req, res) => {
 		res.status(500).json({ success: false, message: error.message });
 	}
 }; 
+
+
+exports.checkUserCompleteStudy = async (req, res) => {
+	try {
+		const userId = req.user.id; // Lấy từ token
+		const progress = await userService.checkUserCompleteStudy(userId);
+
+		res.json({
+			success: true,
+			data: progress
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: error.message
+		});
+	}
+}
+
+exports.getListeningTestVocabulary = async (req, res) => {
+	try {
+		const userId = req.user.id;
+		const { topicId } = req.params;
+
+		const result = await userService.getNextVocabularyForListeningTest(userId, topicId);
+
+		res.json({
+			success: true,
+			...result
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: error.message
+		});
+	}
+}
+
+exports.markTopicAsUnlearned = async (req, res) => {
+	try {
+		const userId = req.user.id;
+		const { topicId } = req.params;
+
+		const result = await userService.markTopicAsUnlearned(userId, topicId);
+
+		res.json({
+			success: true,
+			data: result
+		});
+	} catch (error) {
+		res.status(500).json({
+			success: false,
+			message: error.message
+		});
+	}
+}

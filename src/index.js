@@ -22,6 +22,7 @@ const paymentRoutes = require('./routes/paymentRoutes');
 
 // Khởi tạo Express app
 const app = express();
+app.set('trust proxy', true);
 
 // Middleware
 app.use(helmet()); // Bảo mật HTTP headers
@@ -29,15 +30,6 @@ app.use(cors()); // Cho phép CORS
 app.use(express.json()); // Parse JSON requests
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger); // Log requests
-
-// Rate limiting
-const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 phút
-	max: 100, // giới hạn mỗi IP có 100 requests trong 15 phút
-	standardHeaders: true,
-	legacyHeaders: false
-});
-app.use(limiter);
 
 // Health check route
 app.get('/api/health', (req, res) => {

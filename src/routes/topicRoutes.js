@@ -14,6 +14,7 @@ const validateTopic = [
 // Public routes
 router.get('/', topicController.getTopics);
 router.get('/me',authenticateToken, topicController.getTopicsForMe);
+router.get('/topics-below-level', authenticateToken, topicController.getTopicsBelowLevel);
 router.get('/:id', topicController.getTopicById);
 
 // Protected routes (admin only)

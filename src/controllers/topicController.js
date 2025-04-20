@@ -122,6 +122,28 @@ class TopicController {
 			});
 		}
 	}
+
+	/**
+	 * Liệt kê các chủ đề dưới mức level hiện tại của user
+	 */
+	async getTopicsBelowLevel(req, res) {
+		try {
+			const userId = req.user.id; // Lấy từ token
+			const { page = 1, limit = 10 } = req.query;
+
+			const topics = await topicService.getTopicsBelowUserLevel(userId, page, limit);
+
+			res.json({
+				success: true,
+				...topics
+			});
+		} catch (error) {
+			res.status(500).json({
+				success: false,
+				message: error.message
+			});
+		}
+	}
 }
 
 module.exports = new TopicController(); 

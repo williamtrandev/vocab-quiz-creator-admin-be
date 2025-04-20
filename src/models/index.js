@@ -278,6 +278,16 @@ Vocabulary.belongsToMany(User, {
 	otherKey: 'userId'
 });
 
+UserVocabulary.belongsTo(Vocabulary, {
+	foreignKey: 'vocabularyId',
+	as: 'vocabulary'
+});
+
+Vocabulary.hasMany(UserVocabulary, {
+	foreignKey: 'vocabularyId',
+	as: 'userVocabularies'
+});
+
 // Topic model
 const Topic = sequelize.define('Topic', {
 	id: {

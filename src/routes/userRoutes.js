@@ -37,4 +37,11 @@ router.post('/vocabularies/:vocabularyId/learned', authenticateToken, userContro
 // Đánh dấu từ vựng chưa học
 router.post('/vocabularies/:vocabularyId/unlearned', authenticateToken, userController.markVocabularyAsUnlearned);
 
+// Check học xong hay chưa
+router.get('/study/complete', authenticateToken, userController.checkUserCompleteStudy);
+
+// Lấy danh sách câu hỏi thi nghe
+router.get('/topics/:topicId/vocabularies/listening', authenticateToken, userController.getListeningTestVocabulary);
+router.post('/topics/:topicId/vocabularies/unlearned', authenticateToken, userController.markTopicAsUnlearned);
+
 module.exports = router; 

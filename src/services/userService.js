@@ -1,9 +1,11 @@
-const { User, Vocabulary, UserVocabulary } = require('../models');
+const { User, Vocabulary, UserVocabulary, Topic } = require('../models');
 const { Sequelize, Op } = require('sequelize');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const Joi = require('joi');
+const { sequelize } = require('../config/database');
+
 
 // Validation schema
 const userSchema = Joi.object({
@@ -181,7 +183,7 @@ class UserService {
 			const offset = (page - 1) * limit;
 			const whereClause = {};
 			if (user.level) whereClause.level = user.level;
-			if (topicId) whereClause.topicId = topicId; 
+			if (topicId) whereClause.topicId = topicId;
 			const pagination = {
 				limit: parseInt(limit),
 				offset: parseInt(offset),
@@ -192,13 +194,20 @@ class UserService {
 			if (isLearned === true || isLearned === 'true') {
 				const { count, rows } = await Vocabulary.findAndCountAll({
 					where: whereClause,
-					include: [{
-						model: User,
-						where: { id: userId },
-						through: { attributes: [] }, // bỏ dữ liệu từ bảng trung gian
-						attributes: [], // không cần dữ liệu từ User
-						required: true
-					}],
+					include: [
+						{
+							model: User,
+							where: { id: userId },
+							through: { attributes: [] }, // bỏ dữ liệu từ bảng trung gian
+							attributes: [], // không cần dữ liệu từ User
+							required: true
+						},
+						{
+							model: Topic,
+							as: 'topic',
+							attributes: ['id', 'name', 'description'],
+						}
+					],
 					...pagination,
 				});
 
@@ -229,6 +238,13 @@ class UserService {
 
 				const { count, rows } = await Vocabulary.findAndCountAll({
 					where: unlearnedWhere,
+					include: [
+						{
+							model: Topic,
+							as: 'topic',
+							attributes: ['id', 'name', 'description']
+						}
+					],
 					...pagination,
 				});
 
@@ -247,6 +263,13 @@ class UserService {
 			const [allVocab, learnedVocabs] = await Promise.all([
 				Vocabulary.findAndCountAll({
 					where: whereClause,
+					include: [
+						{
+							model: Topic,
+							as: 'topic',
+							attributes: ['id', 'name', 'description']
+						}
+					],
 					...pagination,
 				}),
 				UserVocabulary.findAll({
@@ -317,6 +340,122 @@ class UserService {
 			throw new Error(`Error marking vocabulary as unlearned: ${error.message}`);
 		}
 	}
+
+	async checkUserCompleteStudy(userId) {
+		try {
+			const user = await User.findByPk(userId);
+			if (!user) {
+				throw new Error('User not found');
+			}
+
+			// Lấy tổng số từ vựng ở level hiện tại của user
+			const totalVocabularies = await Vocabulary.count({
+				where: { level: user.level }
+			});
+
+			// Lấy số từ vựng đã học ở level hiện tại
+			const learnedVocabularies = await UserVocabulary.count({
+				where: { userId },
+				include: [
+					{
+						model: Vocabulary,
+						as: 'vocabulary',
+						where: { level: user.level }
+					}
+				]
+			});
+			return {
+				complete: totalVocabularies == learnedVocabularies
+			};
+		} catch (error) {
+			throw new Error(`Error checking user progress: ${error.message}`);
+		}
+	}
+
+	async getNextVocabularyForListeningTest(userId, topicId) {
+		try {
+			const learnedSubQuery = await UserVocabulary.findAll({
+				where: { userId },
+				attributes: ['vocabularyId'],
+				raw: true,
+			});
+
+			const excludeIds = learnedSubQuery.map(item => item.vocabularyId);
+
+			const unlearnedWhere = { topicId };
+			if (excludeIds.length > 0) {
+				unlearnedWhere.id = { [Op.notIn]: excludeIds };
+			}
+
+			const { count: totalUnlearned, rows: unlearnedVocabularies } = await Vocabulary.findAndCountAll({
+				where: unlearnedWhere,
+				limit: 1
+			});
+
+			const totalVocabularies = await Vocabulary.count({
+				where: { topicId }
+			})
+
+			// Format kết quả với 2 đáp án ngẫu nhiên
+			const formattedVocabularies = await Promise.all(
+				unlearnedVocabularies.map(async (vocabulary) => {
+					// Lấy 2 từ vựng ngẫu nhiên khác trong cùng topic
+					const otherVocabularies = await Vocabulary.findAll({
+						where: {
+							id: { [Op.ne]: vocabulary.id },
+							topicId: topicId
+						},
+						order: sequelize.random(),
+						limit: 2
+					});
+
+					return {
+						id: vocabulary.id,
+						word: vocabulary.word,
+						meaning: vocabulary.meaning,
+						example: vocabulary.example,
+						options: [
+							vocabulary.word,
+							...otherVocabularies.map(v => v.word)
+						].sort(() => Math.random() - 0.5) // Trộn ngẫu nhiên các đáp án
+					};
+				})
+			);
+
+			return {
+				data: formattedVocabularies,
+				totalLearned: totalVocabularies - totalUnlearned,
+				totalVocabularies
+			};
+		} catch (error) {
+			throw new Error(`Error getting vocabularies for listening test: ${error.message}`);
+		}
+	}
+
+	async markTopicAsUnlearned(userId, topicId) {
+		try {
+			const [results, metadata] = await sequelize.query(`
+				DELETE uv FROM user_vocabulary uv
+				INNER JOIN vocabulary v ON uv.vocabularyId = v.id
+				WHERE uv.userId = :userId AND v.topicId = :topicId
+			`, {
+				replacements: { userId, topicId }
+			});
+
+			// `metadata.affectedRows` nếu dùng MySQL
+			// `metadata.rowCount` nếu dùng PostgreSQL
+			const affectedRows = metadata.affectedRows ?? metadata.rowCount;
+
+			if (affectedRows === 0) {
+				throw new Error('No learned vocabularies found for the topic');
+			}
+
+			return true;
+		} catch (error) {
+			throw new Error(`Error marking topic as unlearned: ${error.message}`);
+		}
+	}
+
 }
 
 module.exports = new UserService(); 

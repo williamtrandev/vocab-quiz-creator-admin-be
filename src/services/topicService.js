@@ -91,7 +91,8 @@ class TopicService {
 					as: 'vocabularies',
 					attributes: ['id', 'word', 'meaning', 'example'],
 					required: false
-				}]
+				}],
+				distinct: true
 			});
 
 			const topics = rows.map(topic => ({
@@ -185,6 +186,69 @@ class TopicService {
 		} catch (error) {
 			throw new Error(`Error fetching topic: ${error.message}`);
 		}
+	}
+
+	/**
+ * Liệt kê các chủ đề dưới mức level hiện tại của user
+ */
+	async getTopicsBelowUserLevel(userId, page = 1, limit = 10) {
+		try {
+			const user = await User.findByPk(userId);
+			if (!user) {
+				throw new Error('User not found');
+			}
+			const offset = (page - 1) * limit;
+
+			// Xác định các level dưới level hiện tại
+			const levelsBelow = this.getLevelsBelow(user.level);
+
+			// Lấy tất cả các chủ đề ở các level dưới
+			const { count, rows } = await Topic.findAndCountAll({
+				where: {
+					level: levelsBelow
+				},
+				limit: parseInt(limit),
+				offset: parseInt(offset),
+				order: [['level', 'ASC'], ['name', 'ASC']],
+				attributes: {
+					include: [
+						[
+							Sequelize.literal(`(
+								SELECT COUNT(*)
+								FROM vocabulary AS v
+								WHERE v.topicId = Topic.id
+							)`),
+							'vocabularyCount'
+						]
+					]
+				}
+			});
+
+			const topics = rows.map(topic => ({
+				...topic.toJSON()
+			}));
+
+			return {
+				data: topics,
+				pagination: {
+					total: count,
+					page: parseInt(page),
+					limit: parseInt(limit),
+					pages: Math.ceil(count / limit)
+				}
+			};
+		} catch (error) {
+			throw new Error(`Error getting topics below user level: ${error.message}`);
+		}
+	}
+
+	/**
+	 * Lấy danh sách các level dưới level hiện tại
+	 */
+	getLevelsBelow(currentLevel) {
+		const levels = ['beginner', 'elementary', 'intermediate', 'advanced', 'expert'];
+		const currentIndex = levels.indexOf(currentLevel);
+		return currentIndex > 0 ? levels.slice(0, currentIndex) : [];
 	}
 }
 

@@ -6,8 +6,8 @@ class VocabularyController {
 	 */
 	async getAllVocabularies(req, res) {
 		try {
-			const { page = 1, limit = 10, level } = req.query;
-			const result = await VocabularyService.getAllVocabularies(page, limit, level);
+			const { page = 1, limit = 10, level, topicId } = req.query;
+			const result = await VocabularyService.getAllVocabularies(page, limit, level, topicId);
 
 			res.status(200).json({
 				success: true,

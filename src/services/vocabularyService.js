@@ -14,7 +14,7 @@ class VocabularyService {
 	/**
 	 * Lấy tất cả từ vựng
 	 */
-	async getAllVocabularies(page = 1, limit = 10, level = null) {
+	async getAllVocabularies(page = 1, limit = 10, level = null, topicId = null) {
 		try {
 			const offset = (page - 1) * limit;
 			const queryOptions = {
@@ -25,6 +25,10 @@ class VocabularyService {
 
 			if (level) {
 				queryOptions.where = { level };
+			}
+
+			if (topicId) {
+				queryOptions.where = { topicId };
 			}
 
 			const { count, rows } = await Vocabulary.findAndCountAll({
